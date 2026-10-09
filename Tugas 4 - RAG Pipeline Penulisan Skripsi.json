@@ -1,0 +1,303 @@
+{
+  "name": "Tugas 4 - RAG Pipeline Penulisan Skripsi",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9866784e-e862-4a9d-8e97-8050e2a76582",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1qdM7BTM0GrJq_dXUOuARG93ZwzgtRG6E",
+          "mode": "list",
+          "cachedResultName": "Panduan Penulisan Ilmiah Tugas Akhir Skripsi.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1qdM7BTM0GrJq_dXUOuARG93ZwzgtRG6E/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "3ed5761d-d237-4df9-9c82-0821e1b42d42",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "a2MKelEqBPtmYvT9",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        384,
+        192
+      ],
+      "id": "abdab039-6f2b-4f3a-8aa9-367f4b097561",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6IVLNqliw1gdMCI1",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        192
+      ],
+      "id": "b40e050d-add8-4ce2-90ec-6fdcf723c814",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "1d2a9580-3df5-4f78-8c6f-bdec5f80b688",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XOmz5XGfF8PuKfp3",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        160,
+        432
+      ],
+      "id": "50adaee4-ccef-4b22-81dc-9fc18b9ec9f8",
+      "name": "When chat message received",
+      "webhookId": "5b22af0f-dd51-4ddf-b191-507e5cf0881b"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Kamu adalah Asisten Penulisan Ilmiah Tugas Akhir (TA) yang membantu mahasiswa memahami pedoman penulisan skripsi berdasarkan dokumen yang tersedia di Supabase Vector Store.\n\nTugasmu adalah menjawab pertanyaan tentang penyusunan judul, Bab I Pendahuluan, Bab II Kajian Literatur, Bab III Metodologi, Bab IV Analisis dan Pembahasan, Bab V Kesimpulan dan Saran, abstrak, referensi, sitasi IEEE, serta format penulisan ilmiah.\n\nGunakan tool Supabase Vector Store untuk mencari informasi yang relevan sebelum menjawab. Jawaban harus berdasarkan isi dokumen yang ditemukan. Jelaskan informasi dengan bahasa Indonesia yang jelas, sederhana, dan mudah dipahami mahasiswa.\n\nJika memungkinkan, susun jawaban dalam poin-poin atau langkah-langkah agar mudah diterapkan. Jangan mengarang aturan, persyaratan, atau informasi yang tidak didukung oleh dokumen.\n\nJika informasi yang dibutuhkan tidak ditemukan dalam dokumen yang tersedia, jawab: \"Maaf, saya belum dapat menjawab karena informasi tersebut tidak ditemukan dalam dokumen yang tersedia.\"\n\nJangan mengklaim telah membaca sumber lain atau memeriksa data yang tidak tersedia pada tool."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        384,
+        432
+      ],
+      "id": "9b74c560-c56f-49ba-832a-90cbbba7f302",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        640
+      ],
+      "id": "84ef1ff7-b3fe-46a4-9c10-6af4403fef1d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6IVLNqliw1gdMCI1",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Gunakan tool ini untuk mencari informasi dari dokumen pedoman penulisan ilmiah tugas akhir yang tersimpan di Supabase. Panggil tool ini setiap kali pengguna bertanya tentang aturan, struktur bab, metode penelitian, referensi, sitasi, abstrak, atau format skripsi. Jawab berdasarkan hasil pencarian dokumen yang relevan.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        736,
+        560
+      ],
+      "id": "ca88cc92-424d-40c7-a4b0-3c0647f46e4f",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XOmz5XGfF8PuKfp3",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        400,
+        640
+      ],
+      "id": "55063556-cdf7-4486-9ba3-84fed9c01c34",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "hM3gBleJixpbS0Hi",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c223bfd6-af85-4feb-a6e9-76f914137db2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dc96f10ae7dc95d3c138575ba243a0a167923dbcb524841d451aadf9135d5fb3"
+  },
+  "nodeGroups": [],
+  "id": "tRpiG3BoNX1Z7BiN",
+  "tags": []
+}
